@@ -7,30 +7,51 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "crc.h"
-#define MAX 65
-#define PORT 4200
+#include "headers/utilities.h"
+#define MAX 80
+#define PORT 8080
 #define SA struct sockaddr
 
-// Fonction conçue pour le chat entre client et serveur.
 
-void func(int connfd) {
+
+// Function designed for chat between client and server.
+void func(int connfd)
+{
 	char buff[MAX];
-		//bzero(buff, MAX);
+	int n;
+	// infinite loop for chat
+	for (;;) {
+		bzero(buff, MAX);
 
 		// read the message from client and copy it in buffer
 		read(connfd, buff, sizeof(buff));
+
 		// print buffer which contains the client contents
+		for (int i = 0; i < 5; i++){
+			printf("From client: %s", fragmentation(buff)[i]);
+			printf("\n");	
+		}
+		printf("To client : ");
 		
-		printf("\nTrame du Serveur : \n%s ",buff);
-		if(validerCRC(buff)){
-		   printf("\nTrame recu avec succes\n");
-		}else{
-		   printf("\nEchec de la reception du trame\n");
-		}   
+		
 		bzero(buff, MAX);
+		n = 0;
+		// copy server message in the buffer
+		while ((buff[n++] = getchar()) != '\n')
+			;
+
+		// and send that buffer to client
+		write(connfd, buff, sizeof(buff));
+
+		// if msg contains "Exit" then server exit and chat ended.
+		if (strncmp("exit", buff, 4) == 0) {
+			printf("Server Exit...\n");
+			break;
+		}
+	}
 }
 
+// Driver function
 int main()
 {
 	int sockfd, connfd, len;
